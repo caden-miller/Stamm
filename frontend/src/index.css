@@ -1,0 +1,168 @@
+@import "tailwindcss";
+
+/* Global reset */
+html, body, #root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  font-family: "Inter", system-ui, -apple-system, sans-serif;
+  background-color: #18181b; /* zinc-900 */
+  color: #e4e4e7;           /* zinc-200 */
+}
+
+/* vis-timeline overrides to match dark theme */
+.vis-timeline {
+  background: #18181b;
+  border: none !important;
+  font-family: inherit;
+}
+.vis-panel.vis-center {
+  border: none !important;
+}
+.vis-panel.vis-left {
+  border-right: 1px solid #3f3f46 !important; /* zinc-700 */
+}
+.vis-panel.vis-bottom {
+  border-top: 1px solid #3f3f46 !important;
+}
+.vis-time-axis .vis-text {
+  color: #a1a1aa !important; /* zinc-400 */
+  font-size: 11px;
+}
+.vis-time-axis .vis-grid.vis-minor {
+  border-color: #27272a !important; /* zinc-800 */
+}
+.vis-time-axis .vis-grid.vis-major {
+  border-color: #3f3f46 !important; /* zinc-700 */
+}
+.vis-labelset .vis-label {
+  color: #d4d4d8 !important; /* zinc-300 */
+  font-size: 12px;
+  font-weight: 500;
+  border-bottom: 1px solid #27272a !important;
+}
+.vis-foreground .vis-group {
+  border-bottom: 1px solid #27272a !important;
+}
+.vis-item {
+  border-radius: 4px !important;
+  font-size: 11px !important;
+  color: #fff !important;
+  border-width: 1.5px !important;
+}
+.vis-item.vis-selected {
+  box-shadow: 0 0 0 2px #fff !important;
+}
+.vis-item .vis-item-overflow {
+  overflow: visible;
+}
+
+/* Leaflet popup overrides */
+.leaflet-popup-content-wrapper {
+  background: #27272a !important;
+  color: #e4e4e7 !important;
+  border-radius: 8px !important;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.5) !important;
+}
+.leaflet-popup-tip {
+  background: #27272a !important;
+}
+.leaflet-popup-close-button {
+  color: #a1a1aa !important;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #18181b;
+}
+::-webkit-scrollbar-thumb {
+  background: #3f3f46;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #52525b;
+}
+
+/* ============================================================
+   Timelapse pulse animations
+   ============================================================ */
+
+.pulse-container {
+  pointer-events: none !important;
+}
+
+.pulse-dot {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  animation: pulse-dot-appear 0.3s ease-out forwards;
+  box-shadow: 0 0 8px 2px var(--pulse-color, rgba(255,255,255,0.4));
+}
+
+.pulse-ring {
+  position: absolute;
+  border-radius: 50%;
+  border: 2.5px solid;
+  transform: translate(-50%, -50%);
+  animation: pulse-expand 1.6s ease-out forwards;
+  pointer-events: none;
+}
+
+.pulse-ring-2 {
+  animation-delay: 0.25s;
+  border-width: 2px;
+}
+
+.pulse-ring-3 {
+  animation-delay: 0.5s;
+  border-width: 1.5px;
+}
+
+@keyframes pulse-dot-appear {
+  0%   { transform: translate(-50%, -50%) scale(0); opacity: 0; }
+  60%  { transform: translate(-50%, -50%) scale(1.4); opacity: 1; }
+  100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+}
+
+@keyframes pulse-expand {
+  0%   { width: 14px;  height: 14px;  opacity: 0.7; }
+  100% { width: 100px; height: 100px; opacity: 0; }
+}
+
+/* Timelapse playback cursor on vis-timeline */
+.vis-custom-time.playback-cursor {
+  background-color: #f59e0b !important;
+  width: 2px !important;
+  z-index: 5;
+}
+.vis-custom-time.playback-cursor::before {
+  content: '';
+  display: block;
+  width: 10px;
+  height: 10px;
+  background: #f59e0b;
+  border-radius: 50%;
+  position: absolute;
+  top: -5px;
+  left: -4px;
+}
+
+/* Dim non-revealed items during timelapse */
+.vis-item.timelapse-hidden {
+  opacity: 0.12 !important;
+}
+
+/* Leaflet tile desaturation during timelapse for contrast */
+.timelapse-active .leaflet-tile-pane {
+  filter: brightness(0.5) saturate(0.3);
+  transition: filter 0.5s ease;
+}
+.leaflet-tile-pane {
+  transition: filter 0.5s ease;
+}

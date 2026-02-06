@@ -1,0 +1,109 @@
+0 HEAD
+1 SOUR AncestryViewer
+2 VERS 1.0
+1 GEDC
+2 VERS 5.5.1
+2 FORM LINEAGE-LINKED
+1 CHAR UTF-8
+0 @I1@ INDI
+1 NAME John /Smith/
+1 SEX M
+1 BIRT
+2 DATE 15 MAR 1820
+2 PLAC Springfield, Sangamon, Illinois, USA
+1 DEAT
+2 DATE 22 NOV 1885
+2 PLAC Chicago, Cook, Illinois, USA
+1 OCCU Farmer
+1 FAMS @F1@
+0 @I2@ INDI
+1 NAME Mary /Johnson/
+1 SEX F
+1 BIRT
+2 DATE ABT 1825
+2 PLAC Louisville, Jefferson, Kentucky, USA
+1 DEAT
+2 DATE 3 FEB 1890
+2 PLAC Chicago, Cook, Illinois, USA
+1 FAMS @F1@
+0 @I3@ INDI
+1 NAME James /Smith/
+1 SEX M
+1 BIRT
+2 DATE 10 JUN 1848
+2 PLAC Springfield, Sangamon, Illinois, USA
+1 DEAT
+2 DATE 1910
+2 PLAC Denver, Denver, Colorado, USA
+1 IMMI
+2 DATE BET 1870 AND 1875
+2 PLAC Denver, Denver, Colorado, USA
+1 FAMS @F2@
+1 FAMC @F1@
+0 @I4@ INDI
+1 NAME Elizabeth /Brown/
+1 SEX F
+1 BIRT
+2 DATE 20 SEP 1852
+2 PLAC St. Louis, St. Louis, Missouri, USA
+1 DEAT
+2 DATE AFT 1920
+1 FAMS @F2@
+0 @I5@ INDI
+1 NAME William /Smith/
+1 SEX M
+1 BIRT
+2 DATE 4 JUL 1876
+2 PLAC Denver, Denver, Colorado, USA
+1 DEAT
+2 DATE 12 APR 1918
+2 PLAC Belleau, Aisne, France
+1 BURI
+2 DATE 15 APR 1918
+2 PLAC Aisne-Marne American Cemetery, France
+1 FAMC @F2@
+0 @I6@ INDI
+1 NAME Sarah /Smith/
+1 SEX F
+1 BIRT
+2 DATE MAR 1880
+2 PLAC Denver, Denver, Colorado, USA
+1 FAMC @F2@
+0 @I7@ INDI
+1 NAME Thomas /Bad_Data/
+1 SEX M
+1 BIRT
+2 DATE 10 MAR 1900
+2 PLAC Nowhere, Fakeland
+1 DEAT
+2 DATE 5 JAN 1890
+2 PLAC Nowhere, Fakeland
+1 DEAT
+2 DATE 12 DEC 1960
+2 PLAC Somewhere, Realplace
+1 MARR
+2 DATE 15 JUN 1920
+1 MARR
+2 DATE 20 AUG 1935
+1 FAMS @F3@
+1 FAMS @F4@
+0 @F1@ FAM
+1 HUSB @I1@
+1 WIFE @I2@
+1 CHIL @I3@
+1 MARR
+2 DATE 8 OCT 1845
+2 PLAC Springfield, Sangamon, Illinois, USA
+0 @F2@ FAM
+1 HUSB @I3@
+1 WIFE @I4@
+1 CHIL @I5@
+1 CHIL @I6@
+1 MARR
+2 DATE 22 MAY 1875
+2 PLAC Denver, Denver, Colorado, USA
+0 @F3@ FAM
+1 HUSB @I7@
+0 @F4@ FAM
+1 HUSB @I7@
+0 TRLR
