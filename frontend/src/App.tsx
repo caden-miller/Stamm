@@ -48,6 +48,7 @@ export default function App() {
   /* ---- Filter state ---- */
   const [activeTypes, setActiveTypes] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [dateRange, setDateRange] = useState<{ start: string; end: string } | null>(null);
 
   /* ---- View data ---- */
   const [timelineData, setTimelineData] = useState<TimelineResponse | null>(null);
@@ -70,6 +71,7 @@ export default function App() {
 
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const sortedRef = useRef<GeoFeature[]>([]);
+  const rangeDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   /* ================================================================
      Initial load
@@ -82,6 +84,13 @@ export default function App() {
     fetchPersons().then(setPersons);
     fetchStats().then(setStats);
     fetchConflicts().then(setConflicts);
+
+    // Cleanup debounce timer on unmount
+    return () => {
+      if (rangeDebounceRef.current) {
+        clearTimeout(rangeDebounceRef.current);
+      }
+    };
   }, []);
 
   /* ================================================================
@@ -96,13 +105,15 @@ export default function App() {
     const filters = {
       eventTypes: activeTypes,
       personIds: searchQuery ? persons.map((p) => p.id) : undefined,
+      dateFrom: dateRange?.start,
+      dateTo: dateRange?.end,
     };
     fetchTimeline(filters).then(setTimelineData);
     fetchGeoJSON(filters).then((geo) => {
       setGeoData(geo);
       sortedRef.current = sortedDatedFeatures(geo);
     });
-  }, [activeTypes, persons, searchQuery]);
+  }, [activeTypes, persons, searchQuery, dateRange]);
 
   /* ================================================================
      Filter handlers
@@ -160,8 +171,14 @@ export default function App() {
     [timelineData, selectedPersonId, handleSelectPerson]
   );
 
-  const handleRangeChanged = useCallback((_start: string, _end: string) => {
-    /* reserved */
+  const handleRangeChanged = useCallback((start: string, end: string) => {
+    // Debounce to avoid excessive API calls during pan/zoom
+    if (rangeDebounceRef.current) {
+      clearTimeout(rangeDebounceRef.current);
+    }
+    rangeDebounceRef.current = setTimeout(() => {
+      setDateRange({ start, end });
+    }, 500);
   }, []);
 
   /* ================================================================
