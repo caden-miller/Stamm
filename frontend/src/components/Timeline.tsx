@@ -68,6 +68,7 @@ export default function Timeline({
   onSelectEventRef.current = onSelectEvent;
   const onRangeChangedRef = useRef(onRangeChanged);
   onRangeChangedRef.current = onRangeChanged;
+  const isInternalUpdateRef = useRef(false);
 
   useEffect(() => {
     const tl = timelineRef.current;
@@ -79,6 +80,11 @@ export default function Timeline({
     };
 
     const rangeHandler = (props: { start: Date; end: Date }) => {
+      // Skip if this is triggered by internal updates (like data refresh)
+      if (isInternalUpdateRef.current) {
+        isInternalUpdateRef.current = false;
+        return;
+      }
       onRangeChangedRef.current(
         props.start.toISOString().slice(0, 10),
         props.end.toISOString().slice(0, 10)
@@ -97,6 +103,13 @@ export default function Timeline({
   // Update data when it changes
   useEffect(() => {
     if (!data) return;
+
+    const tl = timelineRef.current;
+    const currentWindow = tl ? tl.getWindow() : null;
+
+    // Mark as internal update to prevent recursive range change
+    isInternalUpdateRef.current = true;
+
     itemsRef.current.clear();
     groupsRef.current.clear();
 
@@ -120,7 +133,13 @@ export default function Timeline({
     if (items.length > 0) {
       itemsRef.current.add(items);
       groupsRef.current.add(groups);
-      timelineRef.current?.fit({ animation: false });
+
+      // Preserve the current view window if it exists, otherwise fit to data
+      if (currentWindow && tl) {
+        tl.setWindow(currentWindow.start, currentWindow.end, { animation: false });
+      } else {
+        tl?.fit({ animation: false });
+      }
     }
   }, [data]);
 
