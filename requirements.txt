@@ -1,4 +1,5 @@
 sqlalchemy>=2.0,<3.0
 click>=8.0,<9.0
 fastapi>=0.100.0
-uvicorn[standard]>=0.23.0
+uvicorn[standard]>=0.22.0
+python_multipart>=0.0.8

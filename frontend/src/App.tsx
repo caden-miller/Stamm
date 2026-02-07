@@ -23,12 +23,13 @@ import FilterBar from "./components/FilterBar";
 import PersonList from "./components/PersonList";
 import PersonDetail from "./components/PersonDetail";
 import ConflictPanel from "./components/ConflictPanel";
+import Dashboard from "./components/Dashboard";
 import Timeline from "./components/Timeline";
 import MapView from "./components/MapView";
 import TimelapseControls from "./components/TimelapseControls";
 import type { PulseEvent } from "./components/PulseLayer";
 
-type SidebarTab = "persons" | "detail" | "conflicts";
+type SidebarTab = "persons" | "detail" | "conflicts" | "dashboard";
 
 /** Sort geo features by date for timelapse. */
 function sortedDatedFeatures(geo: GeoFeatureCollection | null): GeoFeature[] {
@@ -281,6 +282,17 @@ export default function App() {
     [isPlaying, stopTimer, tick]
   );
 
+  /* ================================================================
+     Conflict resolution
+     ================================================================ */
+  const handleConflictResolved = useCallback((updatedConflict: ConflictOut) => {
+    setConflicts((prev) =>
+      prev.map((c) => (c.id === updatedConflict.id ? updatedConflict : c))
+    );
+    // Refetch stats to update counts
+    fetchStats().then(setStats);
+  }, []);
+
   /* ---- Timelapse derived ---- */
   const timelapseActive = visibleEventIds !== null;
   const features = sortedRef.current;
@@ -315,6 +327,7 @@ export default function App() {
                 ["persons", "Persons"],
                 ["detail", "Detail"],
                 ["conflicts", "Conflicts"],
+                ["dashboard", "Dashboard"],
               ] as [SidebarTab, string][]
             ).map(([tab, label]) => (
               <button
@@ -355,8 +368,10 @@ export default function App() {
               <ConflictPanel
                 conflicts={conflicts}
                 onSelectPerson={handleSelectPerson}
+                onConflictResolved={handleConflictResolved}
               />
             )}
+            {sidebarTab === "dashboard" && <Dashboard stats={stats} />}
           </div>
         </div>
 
