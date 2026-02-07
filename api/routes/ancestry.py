@@ -140,6 +140,51 @@ def get_relationship_type(person1_id: int, person2_id: int, db: Session) -> str:
     return "relative"
 
 
+@router.get("/persons/{person_id}/family")
+def get_family(person_id: int, db: Session = Depends(get_db)):
+    """Get immediate family members (parents, spouses, children) for tree expansion."""
+    person = db.query(Person).filter(Person.id == person_id).first()
+    if not person:
+        raise HTTPException(status_code=404, detail="Person not found")
+
+    def _person_brief(p):
+        return {"id": p.id, "display_name": p.display_name, "sex": p.sex}
+
+    parent_ids = find_parents(person_id, db)
+    parents = []
+    for pid in parent_ids:
+        p = db.query(Person).filter(Person.id == pid).first()
+        if p:
+            parents.append(_person_brief(p))
+
+    child_ids = find_children(person_id, db)
+    children = []
+    for cid in child_ids:
+        c = db.query(Person).filter(Person.id == cid).first()
+        if c:
+            children.append(_person_brief(c))
+
+    spouses = []
+    families = db.query(Family).filter(
+        (Family.husband_id == person_id) | (Family.wife_id == person_id)
+    ).all()
+    seen_spouse_ids = set()
+    for fam in families:
+        spouse_id = fam.wife_id if fam.husband_id == person_id else fam.husband_id
+        if spouse_id and spouse_id not in seen_spouse_ids:
+            seen_spouse_ids.add(spouse_id)
+            spouse = db.query(Person).filter(Person.id == spouse_id).first()
+            if spouse:
+                spouses.append(_person_brief(spouse))
+
+    return {
+        "person": _person_brief(person),
+        "parents": parents,
+        "spouses": spouses,
+        "children": children,
+    }
+
+
 @router.get("/persons/{person_id}/ancestors")
 def get_ancestors(
     person_id: int,

@@ -1,28 +1,89 @@
-import { useState } from "react";
-import type { EventTypeOut, StatsOut } from "../api/types";
+import { useState, useMemo, useRef, useEffect } from "react";
+import type { EventTypeOut, StatsOut, PersonSummary } from "../api/types";
 
 interface Props {
   eventTypes: EventTypeOut[];
   activeTypes: string[];
   onToggleType: (code: string) => void;
-  onSearch: (query: string) => void;
+  onSearchChange: (query: string) => void;
+  onSelectPerson: (id: number) => void;
+  searchQuery: string;
+  allPersons: PersonSummary[];
   stats: StatsOut | null;
+}
+
+/* ---- Fuzzy matching ---- */
+
+function fuzzyScore(query: string, person: PersonSummary): number {
+  const q = query.toLowerCase().trim();
+  if (!q) return 0;
+
+  const name = person.display_name.toLowerCase();
+  const first = (person.first_name || "").toLowerCase();
+  const last = (person.last_name || "").toLowerCase();
+
+  // Exact full match
+  if (name === q) return 100;
+
+  // Starts with query
+  if (name.startsWith(q) || first.startsWith(q) || last.startsWith(q)) return 90;
+
+  // All tokens present as substrings
+  const tokens = q.split(/\s+/).filter(Boolean);
+  const fields = [name, first, last];
+  const tokenMatches = tokens.filter((tok) =>
+    fields.some((f) => f.includes(tok))
+  );
+
+  if (tokenMatches.length === tokens.length) return 70;
+  if (tokenMatches.length > 0) return 30 * (tokenMatches.length / tokens.length);
+
+  // Character-subsequence match (handles "jhn" → "john")
+  let qi = 0;
+  for (let i = 0; i < name.length && qi < q.length; i++) {
+    if (name[i] === q[qi]) qi++;
+  }
+  if (qi === q.length) return 15;
+
+  return 0;
 }
 
 export default function FilterBar({
   eventTypes,
   activeTypes,
   onToggleType,
-  onSearch,
+  onSearchChange,
+  onSelectPerson,
+  searchQuery,
+  allPersons,
   stats,
 }: Props) {
-  const [query, setQuery] = useState("");
+  const [showDropdown, setShowDropdown] = useState(false);
+  const wrapperRef = useRef<HTMLDivElement>(null);
 
-  const handleSearch = () => {
-    onSearch(query.trim());
-  };
+  // Close dropdown on outside click
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) {
+        setShowDropdown(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, []);
 
-  // Only show the main event types (not all 18)
+  // Fuzzy-filtered results
+  const results = useMemo(() => {
+    if (!searchQuery.trim()) return [];
+    return allPersons
+      .map((p) => ({ person: p, score: fuzzyScore(searchQuery, p) }))
+      .filter((r) => r.score > 0)
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 12)
+      .map((r) => r.person);
+  }, [searchQuery, allPersons]);
+
+  // Only show the main event types
   const displayTypes = eventTypes.filter((et) =>
     ["BIRT", "DEAT", "MARR", "DIV", "IMMI", "RESI", "BURI", "CENS"].includes(et.code)
   );
@@ -31,7 +92,7 @@ export default function FilterBar({
     <div className="flex items-center gap-3 px-4 py-2 bg-zinc-900 border-b border-zinc-700 flex-wrap">
       {/* App title */}
       <h1 className="text-sm font-bold text-zinc-100 tracking-wide mr-2 shrink-0">
-        Ancestry Viewer
+        Stamm
       </h1>
 
       <div className="h-5 w-px bg-zinc-700 shrink-0" />
@@ -60,35 +121,82 @@ export default function FilterBar({
 
       <div className="h-5 w-px bg-zinc-700 shrink-0" />
 
-      {/* Person search */}
-      <div className="flex gap-1.5 items-center">
-        <input
-          type="text"
-          placeholder="Search person..."
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") handleSearch();
-          }}
-          className="px-2.5 py-1 rounded bg-zinc-800 border border-zinc-600 text-zinc-200 text-xs
-                     placeholder:text-zinc-500 focus:outline-none focus:border-zinc-400 w-40"
-        />
-        <button
-          onClick={handleSearch}
-          className="px-2.5 py-1 rounded bg-zinc-700 text-zinc-300 text-xs hover:bg-zinc-600 transition"
-        >
-          Search
-        </button>
-        {query && (
-          <button
-            onClick={() => {
-              setQuery("");
-              onSearch("");
+      {/* Person search with fuzzy dropdown */}
+      <div className="relative" ref={wrapperRef}>
+        <div className="flex gap-1.5 items-center">
+          <input
+            type="text"
+            placeholder="Search person..."
+            value={searchQuery}
+            onChange={(e) => {
+              onSearchChange(e.target.value);
+              setShowDropdown(true);
             }}
-            className="text-zinc-500 text-xs hover:text-zinc-300"
-          >
-            Clear
-          </button>
+            onFocus={() => {
+              if (searchQuery.trim()) setShowDropdown(true);
+            }}
+            onKeyDown={(e) => {
+              if (e.key === "Escape") setShowDropdown(false);
+              if (e.key === "Enter" && results.length > 0) {
+                onSelectPerson(results[0].id);
+                setShowDropdown(false);
+              }
+            }}
+            className="px-2.5 py-1 rounded bg-zinc-800 border border-zinc-600 text-zinc-200 text-xs
+                       placeholder:text-zinc-500 focus:outline-none focus:border-zinc-400 w-48"
+          />
+          {searchQuery && (
+            <button
+              onClick={() => {
+                onSearchChange("");
+                setShowDropdown(false);
+              }}
+              className="text-zinc-500 text-xs hover:text-zinc-300"
+            >
+              Clear
+            </button>
+          )}
+        </div>
+
+        {/* Fuzzy results dropdown */}
+        {showDropdown && searchQuery.trim() && (
+          <div className="absolute top-full left-0 mt-1 w-72 max-h-80 overflow-y-auto bg-zinc-800 border border-zinc-600 rounded shadow-xl z-50">
+            {results.length === 0 ? (
+              <div className="px-3 py-2 text-xs text-zinc-500">
+                No matches found
+              </div>
+            ) : (
+              results.map((p) => (
+                <button
+                  key={p.id}
+                  onClick={() => {
+                    onSelectPerson(p.id);
+                    setShowDropdown(false);
+                  }}
+                  className="w-full text-left px-3 py-2 hover:bg-zinc-700 transition border-b border-zinc-700/50 last:border-0"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-zinc-200 font-medium">
+                      {p.display_name}
+                    </span>
+                    <span className="text-xs text-zinc-500">
+                      {p.event_count} events
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2 mt-0.5">
+                    {p.sex && (
+                      <span className="text-xs text-zinc-500">
+                        {p.sex === "M" ? "Male" : p.sex === "F" ? "Female" : ""}
+                      </span>
+                    )}
+                    {p.needs_review && (
+                      <span className="text-xs text-amber-400">needs review</span>
+                    )}
+                  </div>
+                </button>
+              ))
+            )}
+          </div>
         )}
       </div>
 

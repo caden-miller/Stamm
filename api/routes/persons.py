@@ -16,7 +16,7 @@ from db.models import Person, Event, EventType, Location, Family, FamilyChild, C
 from api.deps import get_db
 from api.schemas import (
     PersonSummary, PersonDetail, EventBrief, EventTypeOut,
-    LocationBrief, FamilyBrief, PersonProfileUpdate,
+    LocationBrief, FamilyBrief, PersonProfileUpdate, PersonReviewRequest,
 )
 
 router = APIRouter(prefix="/api/persons", tags=["persons"])
@@ -155,6 +155,40 @@ def get_person_events(person_id: int, db: Session = Depends(get_db)):
         .all()
     )
     return [_event_to_brief(e, db) for e in events]
+
+
+@router.patch("/{person_id}/review", response_model=PersonSummary)
+def review_person(
+    person_id: int,
+    body: PersonReviewRequest,
+    db: Session = Depends(get_db),
+):
+    """Mark a person as reviewed (clears needs_review) or flag for review."""
+    person = db.query(Person).filter(Person.id == person_id).first()
+    if not person:
+        raise HTTPException(status_code=404, detail="Person not found")
+
+    person.needs_review = 0 if body.reviewed else 1
+    person.updated_at = datetime.utcnow().isoformat()
+    db.commit()
+
+    event_count = db.query(Event).filter(Event.person_id == person.id).count()
+    conflict_count = db.query(Conflict).filter(
+        Conflict.person_id == person.id,
+        Conflict.resolution.is_(None),
+    ).count()
+
+    return PersonSummary(
+        id=person.id,
+        gedcom_id=person.gedcom_id,
+        first_name=person.first_name,
+        last_name=person.last_name,
+        display_name=person.display_name,
+        sex=person.sex,
+        needs_review=bool(person.needs_review),
+        event_count=event_count,
+        conflict_count=conflict_count,
+    )
 
 
 # ---------------------------------------------------------------------------

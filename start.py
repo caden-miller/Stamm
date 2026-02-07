@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-Ancestry Viewer — Single-command startup.
+Stamm — Single-command startup.
 
 Usage:
     python start.py                          # Start server on port 8000
@@ -64,7 +64,7 @@ def start_server(host, port):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Ancestry Viewer — start the server")
+    parser = argparse.ArgumentParser(description="Stamm — start the server")
     parser.add_argument("--port", type=int, default=8000, help="Port (default: 8000)")
     parser.add_argument("--host", default="0.0.0.0", help="Host (default: 0.0.0.0)")
     parser.add_argument("--build", action="store_true", help="Rebuild frontend before starting")

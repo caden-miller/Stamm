@@ -31,37 +31,17 @@ export default function Dashboard({ stats }: Props) {
   const [familySize, setFamilySize] = useState<FamilySizeDistribution | null>(null);
   const [gender, setGender] = useState<GenderDistribution | null>(null);
   const [lifespan, setLifespan] = useState<LifespanData | null>(null);
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    Promise.all([
-      fetchOrigins(),
-      fetchTopLocations(10),
-      fetchTimelineHistogram("decade"),
-      fetchEventsByType(),
-      fetchFamilySizeDistribution(),
-      fetchGenderDistribution(),
-      fetchLifespan(),
-    ])
-      .then(([o, tl, h, ebt, fs, g, ls]) => {
-        setOrigins(o);
-        setTopLocations(tl);
-        setHistogram(h);
-        setEventsByType(ebt);
-        setFamilySize(fs);
-        setGender(g);
-        setLifespan(ls);
-      })
-      .finally(() => setLoading(false));
+    // Each section loads independently — cached responses return instantly
+    fetchOrigins().then(setOrigins);
+    fetchTopLocations(10).then(setTopLocations);
+    fetchTimelineHistogram("decade").then(setHistogram);
+    fetchEventsByType().then(setEventsByType);
+    fetchFamilySizeDistribution().then(setFamilySize);
+    fetchGenderDistribution().then(setGender);
+    fetchLifespan().then(setLifespan);
   }, []);
-
-  if (loading) {
-    return (
-      <div className="p-4 text-zinc-400 text-sm">
-        Loading analytics...
-      </div>
-    );
-  }
 
   return (
     <div className="p-4 overflow-y-auto h-full space-y-4">
