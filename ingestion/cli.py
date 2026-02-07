@@ -26,7 +26,7 @@ from ingestion.resolver import resolve_conflicts
 
 @click.group()
 def cli():
-    """Ancestry Viewer — GEDCOM ingestion pipeline."""
+    """Stamm — GEDCOM ingestion pipeline."""
     pass
 
 
@@ -52,7 +52,7 @@ def ingest(filepath, non_interactive, skip_geocode, geocode_limit, db_path):
     session = get_session(engine)
 
     click.echo("=" * 60)
-    click.echo("  Ancestry Viewer — GEDCOM Ingestion")
+    click.echo("  Stamm — GEDCOM Ingestion")
     click.echo("=" * 60)
     click.echo("")
 

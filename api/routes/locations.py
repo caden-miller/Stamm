@@ -1,19 +1,24 @@
 """
 Location / GeoJSON endpoints.
 
-GET /api/locations       — list all locations
-GET /api/locations/geojson — GeoJSON FeatureCollection of geocoded events
+GET  /api/locations           — list all locations
+GET  /api/locations/geojson   — GeoJSON FeatureCollection of geocoded events
+GET  /api/locations/geocode/stream — SSE stream for geocoding pending locations
+POST /api/locations/merge     — merge duplicate locations
 """
+import json
+import time
 from typing import Optional, List
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, HTTPException
+from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
-from sqlalchemy import func
 
 from db.models import Event, EventType, Person, Location
 from api.deps import get_db
 from api.schemas import (
     LocationOut, GeoFeature, GeoFeatureCollection, GeoProperties,
+    LocationMergeRequest, LocationMergeResponse,
 )
 
 router = APIRouter(prefix="/api/locations", tags=["locations"])
@@ -22,6 +27,7 @@ router = APIRouter(prefix="/api/locations", tags=["locations"])
 @router.get("", response_model=List[LocationOut])
 def list_locations(
     geocode_status: Optional[str] = Query(None, description="Filter by geocode status"),
+    search: Optional[str] = Query(None, description="Search location text"),
     limit: int = Query(200, ge=1, le=1000),
     offset: int = Query(0, ge=0),
     db: Session = Depends(get_db),
@@ -31,6 +37,16 @@ def list_locations(
 
     if geocode_status:
         q = q.filter(Location.geocode_status == geocode_status)
+
+    if search:
+        pattern = f"%{search}%"
+        q = q.filter(
+            (Location.normalized.ilike(pattern))
+            | (Location.raw_text.ilike(pattern))
+            | (Location.city.ilike(pattern))
+            | (Location.state.ilike(pattern))
+            | (Location.country.ilike(pattern))
+        )
 
     q = q.order_by(Location.normalized)
     locations = q.offset(offset).limit(limit).all()
@@ -126,3 +142,140 @@ def get_geojson(
         ))
 
     return GeoFeatureCollection(features=features)
+
+
+@router.get("/geocode/stream")
+def geocode_stream(
+    limit: int = Query(50, ge=1, le=500),
+    db: Session = Depends(get_db),
+):
+    """
+    SSE endpoint that geocodes pending locations one by one.
+    Streams progress events as JSON.
+    """
+    from ingestion.geocoder import _geocode_single, RATE_LIMIT_SECONDS
+
+    locations = (
+        db.query(Location)
+        .filter(Location.geocode_status == "pending")
+        .limit(limit)
+        .all()
+    )
+    total = len(locations)
+
+    def generate():
+        stats = {"success": 0, "failed": 0, "skipped": 0, "total": total}
+
+        for i, loc in enumerate(locations):
+            search_text = loc.normalized or loc.raw_text
+            if not search_text or search_text.lower() in ("unknown", ""):
+                loc.geocode_status = "skipped"
+                stats["skipped"] += 1
+                event = {
+                    "type": "progress",
+                    "location_id": loc.id,
+                    "raw_text": loc.raw_text,
+                    "status": "skipped",
+                    "latitude": None,
+                    "longitude": None,
+                    "current": i + 1,
+                    "total": total,
+                }
+                db.commit()
+                yield f"data: {json.dumps(event)}\n\n"
+                continue
+
+            coords = _geocode_single(search_text)
+            if coords:
+                loc.latitude, loc.longitude = coords
+                loc.geocode_status = "success"
+                stats["success"] += 1
+                status = "success"
+            else:
+                loc.geocode_status = "failed"
+                stats["failed"] += 1
+                status = "failed"
+
+            db.commit()
+
+            event = {
+                "type": "progress",
+                "location_id": loc.id,
+                "raw_text": loc.raw_text,
+                "status": status,
+                "latitude": loc.latitude,
+                "longitude": loc.longitude,
+                "current": i + 1,
+                "total": total,
+            }
+            yield f"data: {json.dumps(event)}\n\n"
+
+            # Rate limit
+            if i < total - 1:
+                time.sleep(RATE_LIMIT_SECONDS)
+
+        # Summary
+        summary = {"type": "summary", **stats}
+        yield f"data: {json.dumps(summary)}\n\n"
+
+    return StreamingResponse(
+        generate(),
+        media_type="text/event-stream",
+        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
+    )
+
+
+@router.post("/merge", response_model=LocationMergeResponse)
+def merge_locations(
+    req: LocationMergeRequest,
+    db: Session = Depends(get_db),
+):
+    """
+    Merge source locations into a target location.
+    All events referencing source locations get reassigned to the target.
+    Source locations are then deleted.
+    """
+    target = db.query(Location).filter(Location.id == req.target_id).first()
+    if not target:
+        raise HTTPException(status_code=404, detail="Target location not found")
+
+    source_ids = [sid for sid in req.source_ids if sid != req.target_id]
+    if not source_ids:
+        raise HTTPException(status_code=400, detail="No valid source locations to merge")
+
+    sources = db.query(Location).filter(Location.id.in_(source_ids)).all()
+    if len(sources) != len(source_ids):
+        raise HTTPException(status_code=404, detail="One or more source locations not found")
+
+    # Reassign events
+    events_updated = (
+        db.query(Event)
+        .filter(Event.location_id.in_(source_ids))
+        .update({Event.location_id: req.target_id}, synchronize_session="fetch")
+    )
+
+    # Delete source locations
+    for src in sources:
+        db.delete(src)
+
+    db.commit()
+
+    event_count = db.query(Event).filter(Event.location_id == target.id).count()
+
+    return LocationMergeResponse(
+        target=LocationOut(
+            id=target.id,
+            raw_text=target.raw_text,
+            normalized=target.normalized,
+            city=target.city,
+            county=target.county,
+            state=target.state,
+            country=target.country,
+            latitude=target.latitude,
+            longitude=target.longitude,
+            geocode_status=target.geocode_status,
+            event_count=event_count,
+        ),
+        merged_count=len(sources),
+        events_updated=events_updated,
+    )

@@ -27,7 +27,7 @@ FRONTEND_DIST = os.path.join(_project_root, "frontend", "dist")
 
 def create_app():
     app = FastAPI(
-        title="Ancestry Viewer API",
+        title="Stamm API",
         description="REST API for genealogical data from GEDCOM files",
         version="0.1.0",
     )

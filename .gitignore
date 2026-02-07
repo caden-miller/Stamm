@@ -3,3 +3,7 @@ data/ancestry*
 api/__pycache__/
 api/routes/__pycache__/
 db/__pycache__/
+ingestion/__pycache__/
+__pycache__/
+*.pyc
+.claude/

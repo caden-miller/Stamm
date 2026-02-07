@@ -262,7 +262,59 @@ export interface RelationshipPath {
   relationship_description: string;
 }
 
+export interface FamilyMemberBrief {
+  id: number;
+  display_name: string;
+  sex: string | null;
+}
+
+export interface FamilyData {
+  person: FamilyMemberBrief;
+  parents: FamilyMemberBrief[];
+  spouses: FamilyMemberBrief[];
+  children: FamilyMemberBrief[];
+}
+
 export interface ConflictResolveRequest {
   resolution: string;
   notes?: string;
+}
+
+export interface LocationOut {
+  id: number;
+  raw_text: string;
+  normalized: string | null;
+  city: string | null;
+  county: string | null;
+  state: string | null;
+  country: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  geocode_status: string;
+  event_count: number;
+}
+
+export interface GeocodeProgressEvent {
+  type: "progress";
+  location_id: number;
+  raw_text: string;
+  status: string;
+  latitude: number | null;
+  longitude: number | null;
+  current: number;
+  total: number;
+}
+
+export interface GeocodeSummary {
+  type: "summary";
+  success: number;
+  failed: number;
+  skipped: number;
+  total: number;
+}
+
+export interface LocationMergeResponse {
+  target: LocationOut;
+  merged_count: number;
+  events_updated: number;
 }

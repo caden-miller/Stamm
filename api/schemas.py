@@ -92,6 +92,31 @@ class PersonProfileUpdate(BaseModel):
     notes: Optional[str] = None
 
 
+class PersonReviewRequest(BaseModel):
+    reviewed: bool
+
+
+class PersonPhotoOut(BaseModel):
+    id: int
+    person_id: int
+    file_path: str
+    url: str
+    caption: Optional[str] = None
+    date_taken: Optional[str] = None
+    is_primary: bool
+    sort_order: int
+
+    class Config:
+        from_attributes = True
+
+
+class PersonPhotoUpdate(BaseModel):
+    caption: Optional[str] = None
+    date_taken: Optional[str] = None
+    is_primary: Optional[bool] = None
+    sort_order: Optional[int] = None
+
+
 # ---------------------------------------------------------------------------
 # Event
 # ---------------------------------------------------------------------------
@@ -195,6 +220,17 @@ class LocationOut(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class LocationMergeRequest(BaseModel):
+    source_ids: List[int]
+    target_id: int
+
+
+class LocationMergeResponse(BaseModel):
+    target: LocationOut
+    merged_count: int
+    events_updated: int
 
 
 # ---------------------------------------------------------------------------

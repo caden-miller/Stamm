@@ -1,168 +1,263 @@
 @import "tailwindcss";
 
+/* ============================================================
+   Design System — "The Gilded Archive"
+   Dark archival theme with warm gold accents
+   ============================================================ */
+
+:root {
+  --bg-deep: #0a0d12;
+  --bg-base: #111519;
+  --bg-surface: #171c24;
+  --bg-card: #1c222d;
+  --bg-card-hover: #232a37;
+  --border: #272e3d;
+  --border-light: #323b4e;
+  --gold: #c8a34e;
+  --gold-dim: #9e7f36;
+  --gold-bright: #ddb95e;
+  --text-primary: #eae5da;
+  --text-secondary: #929aae;
+  --text-muted: #5d6478;
+  --font-display: "Playfair Display", Georgia, serif;
+  --font-body: "Source Sans 3", system-ui, sans-serif;
+}
+
+/* ============================================================
+   Light theme
+   ============================================================ */
+[data-theme="light"] {
+  --bg-deep: #f5f2ec;
+  --bg-base: #faf8f4;
+  --bg-surface: #efeae2;
+  --bg-card: #ffffff;
+  --bg-card-hover: #f5f2ec;
+  --border: #ddd7cc;
+  --border-light: #ccc5b8;
+  --gold: #9e7f36;
+  --gold-dim: #c8a34e;
+  --gold-bright: #7a6020;
+  --text-primary: #1c1a16;
+  --text-secondary: #5c5649;
+  --text-muted: #9a9184;
+}
+
 /* Global reset */
 html, body, #root {
   height: 100%;
   margin: 0;
   padding: 0;
-  overflow: hidden;
-  font-family: "Inter", system-ui, -apple-system, sans-serif;
-  background-color: #18181b; /* zinc-900 */
-  color: #e4e4e7;           /* zinc-200 */
+  font-family: var(--font-body);
+  font-weight: 400;
+  background-color: var(--bg-deep);
+  color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-/* vis-timeline overrides to match dark theme */
+/* ============================================================
+   vis-timeline overrides
+   ============================================================ */
 .vis-timeline {
-  background: #18181b;
+  background: var(--bg-base);
   border: none !important;
-  font-family: inherit;
+  font-family: var(--font-body);
 }
-.vis-panel.vis-center {
-  border: none !important;
-}
-.vis-panel.vis-left {
-  border-right: 1px solid #3f3f46 !important; /* zinc-700 */
-}
-.vis-panel.vis-bottom {
-  border-top: 1px solid #3f3f46 !important;
-}
-.vis-time-axis .vis-text {
-  color: #a1a1aa !important; /* zinc-400 */
-  font-size: 11px;
-}
-.vis-time-axis .vis-grid.vis-minor {
-  border-color: #27272a !important; /* zinc-800 */
-}
-.vis-time-axis .vis-grid.vis-major {
-  border-color: #3f3f46 !important; /* zinc-700 */
-}
+.vis-panel.vis-center { border: none !important; }
+.vis-panel.vis-left { border-right: 1px solid var(--border) !important; }
+.vis-panel.vis-bottom { border-top: 1px solid var(--border) !important; }
+.vis-time-axis .vis-text { color: var(--text-muted) !important; font-size: 11px; }
+.vis-time-axis .vis-grid.vis-minor { border-color: #1a1f28 !important; }
+.vis-time-axis .vis-grid.vis-major { border-color: var(--border) !important; }
 .vis-labelset .vis-label {
-  color: #d4d4d8 !important; /* zinc-300 */
-  font-size: 12px;
-  font-weight: 500;
-  border-bottom: 1px solid #27272a !important;
+  color: var(--text-secondary) !important;
+  font-size: 12px; font-weight: 500;
+  border-bottom: 1px solid #1a1f28 !important;
 }
-.vis-foreground .vis-group {
-  border-bottom: 1px solid #27272a !important;
-}
-.vis-item {
-  border-radius: 4px !important;
-  font-size: 11px !important;
-  color: #fff !important;
-  border-width: 1.5px !important;
-}
-.vis-item.vis-selected {
-  box-shadow: 0 0 0 2px #fff !important;
-}
-.vis-item .vis-item-overflow {
-  overflow: visible;
-}
+.vis-foreground .vis-group { border-bottom: 1px solid #1a1f28 !important; }
+.vis-item { border-radius: 4px !important; font-size: 11px !important; color: #fff !important; border-width: 1.5px !important; }
+.vis-item.vis-selected { box-shadow: 0 0 0 2px var(--gold) !important; }
+.vis-item .vis-item-overflow { overflow: visible; }
 
-/* Leaflet popup overrides */
+/* ============================================================
+   Leaflet popup overrides
+   ============================================================ */
 .leaflet-popup-content-wrapper {
-  background: #27272a !important;
-  color: #e4e4e7 !important;
+  background: var(--bg-card) !important;
+  color: var(--text-primary) !important;
   border-radius: 8px !important;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.5) !important;
+  border: 1px solid var(--border) !important;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.5) !important;
 }
-.leaflet-popup-tip {
-  background: #27272a !important;
-}
-.leaflet-popup-close-button {
-  color: #a1a1aa !important;
-}
+.leaflet-popup-tip { background: var(--bg-card) !important; }
+.leaflet-popup-close-button { color: var(--text-muted) !important; }
 
-/* Scrollbar styling */
-::-webkit-scrollbar {
-  width: 6px;
-}
-::-webkit-scrollbar-track {
-  background: #18181b;
-}
-::-webkit-scrollbar-thumb {
-  background: #3f3f46;
-  border-radius: 3px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: #52525b;
-}
+/* ============================================================
+   Scrollbar
+   ============================================================ */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--border-light); }
 
 /* ============================================================
    Timelapse pulse animations
    ============================================================ */
-
-.pulse-container {
-  pointer-events: none !important;
-}
-
+.pulse-container { pointer-events: none !important; }
 .pulse-dot {
-  position: absolute;
-  width: 14px;
-  height: 14px;
-  border-radius: 50%;
+  position: absolute; width: 14px; height: 14px; border-radius: 50%;
   transform: translate(-50%, -50%);
   animation: pulse-dot-appear 0.3s ease-out forwards;
   box-shadow: 0 0 8px 2px var(--pulse-color, rgba(255,255,255,0.4));
 }
-
 .pulse-ring {
-  position: absolute;
-  border-radius: 50%;
-  border: 2.5px solid;
+  position: absolute; border-radius: 50%; border: 2.5px solid;
   transform: translate(-50%, -50%);
   animation: pulse-expand 1.6s ease-out forwards;
   pointer-events: none;
 }
-
-.pulse-ring-2 {
-  animation-delay: 0.25s;
-  border-width: 2px;
-}
-
-.pulse-ring-3 {
-  animation-delay: 0.5s;
-  border-width: 1.5px;
-}
-
+.pulse-ring-2 { animation-delay: 0.25s; border-width: 2px; }
+.pulse-ring-3 { animation-delay: 0.5s; border-width: 1.5px; }
 @keyframes pulse-dot-appear {
   0%   { transform: translate(-50%, -50%) scale(0); opacity: 0; }
   60%  { transform: translate(-50%, -50%) scale(1.4); opacity: 1; }
   100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
 }
-
 @keyframes pulse-expand {
   0%   { width: 14px;  height: 14px;  opacity: 0.7; }
   100% { width: 100px; height: 100px; opacity: 0; }
 }
-
-/* Timelapse playback cursor on vis-timeline */
 .vis-custom-time.playback-cursor {
-  background-color: #f59e0b !important;
-  width: 2px !important;
-  z-index: 5;
+  background-color: var(--gold) !important; width: 2px !important; z-index: 5;
 }
 .vis-custom-time.playback-cursor::before {
-  content: '';
-  display: block;
-  width: 10px;
-  height: 10px;
-  background: #f59e0b;
-  border-radius: 50%;
-  position: absolute;
-  top: -5px;
-  left: -4px;
+  content: ''; display: block; width: 10px; height: 10px;
+  background: var(--gold); border-radius: 50%;
+  position: absolute; top: -5px; left: -4px;
 }
-
-/* Dim non-revealed items during timelapse */
-.vis-item.timelapse-hidden {
-  opacity: 0.12 !important;
-}
-
-/* Leaflet tile desaturation during timelapse for contrast */
+.vis-item.timelapse-hidden { opacity: 0.12 !important; }
 .timelapse-active .leaflet-tile-pane {
-  filter: brightness(0.5) saturate(0.3);
-  transition: filter 0.5s ease;
+  filter: brightness(0.5) saturate(0.3); transition: filter 0.5s ease;
 }
-.leaflet-tile-pane {
-  transition: filter 0.5s ease;
+.leaflet-tile-pane { transition: filter 0.5s ease; }
+
+/* ============================================================
+   Page transition
+   ============================================================ */
+@keyframes page-fade-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.page-enter { animation: page-fade-in 0.25s ease-out; }
+
+/* ============================================================
+   Playback date overlay
+   ============================================================ */
+.playback-date-overlay {
+  position: absolute;
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 800;
+  text-align: center;
+  padding: 12px 24px;
+  border-radius: 12px;
+  background: rgba(10, 13, 18, 0.85);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(200, 163, 78, 0.15);
+  pointer-events: none;
+}
+
+/* ============================================================
+   Event chat panel
+   ============================================================ */
+.event-chat-panel {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  bottom: 12px;
+  width: 320px;
+  z-index: 800;
+  display: flex;
+  flex-direction: column;
+  border-radius: 12px;
+  background: rgba(10, 13, 18, 0.88);
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--border);
+  overflow: hidden;
+}
+
+@keyframes chat-slide-in {
+  from { opacity: 0; transform: translateX(12px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+.chat-entry {
+  animation: chat-slide-in 0.2s ease-out both;
+}
+.chat-entry:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+/* ============================================================
+   Leaflet markercluster dark theme
+   ============================================================ */
+.marker-cluster {
+  background: rgba(200, 163, 78, 0.25) !important;
+}
+.marker-cluster div {
+  background: rgba(200, 163, 78, 0.6) !important;
+  color: #fff !important;
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 600;
+}
+.marker-cluster-small { background: rgba(80, 136, 197, 0.25) !important; }
+.marker-cluster-small div { background: rgba(80, 136, 197, 0.6) !important; }
+.marker-cluster-medium { background: rgba(200, 163, 78, 0.25) !important; }
+.marker-cluster-medium div { background: rgba(200, 163, 78, 0.6) !important; }
+.marker-cluster-large { background: rgba(197, 80, 80, 0.25) !important; }
+.marker-cluster-large div { background: rgba(197, 80, 80, 0.6) !important; }
+
+/* ============================================================
+   Light theme overrides
+   ============================================================ */
+
+/* vis-timeline light */
+[data-theme="light"] .vis-time-axis .vis-grid.vis-minor { border-color: #e8e4dc !important; }
+[data-theme="light"] .vis-time-axis .vis-grid.vis-major { border-color: var(--border) !important; }
+[data-theme="light"] .vis-labelset .vis-label { border-bottom: 1px solid #e8e4dc !important; }
+[data-theme="light"] .vis-foreground .vis-group { border-bottom: 1px solid #e8e4dc !important; }
+[data-theme="light"] .vis-item { color: #fff !important; }
+
+/* Leaflet popups light */
+[data-theme="light"] .leaflet-popup-content-wrapper {
+  box-shadow: 0 4px 16px rgba(0,0,0,0.12) !important;
+}
+
+/* Scrollbar light */
+[data-theme="light"] ::-webkit-scrollbar-thumb { background: #ccc5b8; }
+[data-theme="light"] ::-webkit-scrollbar-thumb:hover { background: #b8b0a0; }
+
+/* Playback overlay light */
+[data-theme="light"] .playback-date-overlay {
+  background: rgba(255, 255, 255, 0.9);
+  border-color: rgba(158, 127, 54, 0.25);
+}
+
+/* Event chat panel light */
+[data-theme="light"] .event-chat-panel {
+  background: rgba(255, 255, 255, 0.92);
+}
+[data-theme="light"] .chat-entry:hover {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+/* Timelapse map dimming — lighter for light theme */
+[data-theme="light"] .timelapse-active .leaflet-tile-pane {
+  filter: brightness(1.1) saturate(0.5);
+}
+
+/* Marker cluster light — use darker text */
+[data-theme="light"] .marker-cluster div {
+  color: #1c1a16 !important;
 }
