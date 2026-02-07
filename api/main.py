@@ -17,7 +17,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 
 from api.deps import startup
-from api.routes import persons, events, timeline, locations, conflicts
+from api.routes import persons, events, timeline, locations, conflicts, ancestry, upload, analytics
 from api.schemas import StatsOut
 from db.models import Person, Family, Event, Location, Conflict
 
@@ -56,6 +56,9 @@ def create_app():
     app.include_router(timeline.router)
     app.include_router(locations.router)
     app.include_router(conflicts.router)
+    app.include_router(ancestry.router)
+    app.include_router(upload.router)
+    app.include_router(analytics.router)
 
     @app.get("/api/health")
     def health():

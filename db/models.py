@@ -107,6 +107,8 @@ class Person(Base):
     sex = Column(Text)
     needs_review = Column(Integer, nullable=False, default=0)
     notes = Column(Text)
+    profile_image = Column(Text)  # URL or file path to profile image
+    biography = Column(Text)  # Extended biography text
     created_at = Column(Text, nullable=False, default=lambda: datetime.utcnow().isoformat())
     updated_at = Column(Text, nullable=False, default=lambda: datetime.utcnow().isoformat())
 
