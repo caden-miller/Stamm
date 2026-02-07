@@ -8,12 +8,35 @@ import type {
   GeoFeatureCollection,
   ConflictOut,
   StatsOut,
+  OriginsData,
+  TopLocationsData,
+  TimelineHistogram,
+  EventsByType,
+  FamilySizeDistribution,
+  GenderDistribution,
+  LifespanData,
+  AncestorsData,
+  DescendantsData,
+  RelationshipPath,
+  ConflictResolveRequest,
 } from "./types";
 
 const BASE = "/api";
 
 async function get<T>(path: string): Promise<T> {
   const res = await fetch(`${BASE}${path}`);
+  if (!res.ok) {
+    throw new Error(`API ${res.status}: ${res.statusText}`);
+  }
+  return res.json() as Promise<T>;
+}
+
+async function patch<T>(path: string, body: unknown): Promise<T> {
+  const res = await fetch(`${BASE}${path}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
   if (!res.ok) {
     throw new Error(`API ${res.status}: ${res.statusText}`);
   }
@@ -87,4 +110,71 @@ export function fetchConflicts(): Promise<ConflictOut[]> {
 
 export function fetchStats(): Promise<StatsOut> {
   return get("/stats");
+}
+
+/* ---- Analytics ---- */
+
+export function fetchOrigins(): Promise<OriginsData> {
+  return get("/analytics/origins");
+}
+
+export function fetchTopLocations(limit?: number): Promise<TopLocationsData> {
+  const params = new URLSearchParams();
+  if (limit) params.set("limit", limit.toString());
+  const qs = params.toString();
+  return get(`/analytics/locations/top${qs ? `?${qs}` : ""}`);
+}
+
+export function fetchTimelineHistogram(
+  bucketSize: "decade" | "century" = "decade"
+): Promise<TimelineHistogram> {
+  return get(`/analytics/timeline/histogram?bucket_size=${bucketSize}`);
+}
+
+export function fetchEventsByType(): Promise<EventsByType> {
+  return get("/analytics/timeline/events-by-type");
+}
+
+export function fetchFamilySizeDistribution(): Promise<FamilySizeDistribution> {
+  return get("/analytics/families/size-distribution");
+}
+
+export function fetchGenderDistribution(): Promise<GenderDistribution> {
+  return get("/analytics/demographics/gender");
+}
+
+export function fetchLifespan(): Promise<LifespanData> {
+  return get("/analytics/lifespan/average");
+}
+
+/* ---- Ancestry ---- */
+
+export function fetchAncestors(
+  personId: number,
+  generations: number = 3
+): Promise<AncestorsData> {
+  return get(`/ancestry/persons/${personId}/ancestors?generations=${generations}`);
+}
+
+export function fetchDescendants(
+  personId: number,
+  generations: number = 3
+): Promise<DescendantsData> {
+  return get(`/ancestry/persons/${personId}/descendants?generations=${generations}`);
+}
+
+export function fetchRelationshipPath(
+  person1Id: number,
+  person2Id: number
+): Promise<RelationshipPath> {
+  return get(`/ancestry/persons/${person1Id}/path/${person2Id}`);
+}
+
+/* ---- Conflict Resolution ---- */
+
+export function resolveConflict(
+  conflictId: number,
+  request: ConflictResolveRequest
+): Promise<ConflictOut> {
+  return patch(`/conflicts/${conflictId}`, request);
 }
