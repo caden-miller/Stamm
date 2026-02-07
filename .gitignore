@@ -1,2 +1,5 @@
 data/Miller Family Tree.ged
 data/ancestry*
+api/__pycache__/
+api/routes/__pycache__/
+db/__pycache__/
