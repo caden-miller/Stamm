@@ -15,7 +15,7 @@
 
 ---
 
-*Stamm* (German: "lineage") transforms standard GEDCOM genealogy files into an interactive, visual experience &mdash; map explorations, animated timelines, family trees, analytics dashboards, and more.
+*Stamm* (German: "lineage, tree, root") transforms standard GEDCOM genealogy files into an interactive, visual experience &mdash; map explorations, animated timelines, family trees, analytics dashboards, and more.
 
 </div>
 
