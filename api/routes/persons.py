@@ -3,8 +3,10 @@ Person endpoints.
 
 GET /api/persons          — list with search/filter
 GET /api/persons/{id}     — detail with events and families
+PATCH /api/persons/{id}   — update person profile
 GET /api/persons/{id}/events — events for a person
 """
+from datetime import datetime
 from typing import Optional, List
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -14,7 +16,7 @@ from db.models import Person, Event, EventType, Location, Family, FamilyChild, C
 from api.deps import get_db
 from api.schemas import (
     PersonSummary, PersonDetail, EventBrief, EventTypeOut,
-    LocationBrief, FamilyBrief,
+    LocationBrief, FamilyBrief, PersonProfileUpdate,
 )
 
 router = APIRouter(prefix="/api/persons", tags=["persons"])
@@ -102,11 +104,41 @@ def get_person(person_id: int, db: Session = Depends(get_db)):
         sex=person.sex,
         needs_review=bool(person.needs_review),
         notes=person.notes,
+        profile_image=person.profile_image,
+        biography=person.biography,
         event_count=event_count,
         conflict_count=conflict_count,
         events=event_briefs,
         families=family_briefs,
     )
+
+
+@router.patch("/{person_id}", response_model=PersonDetail)
+def update_person_profile(
+    person_id: int,
+    update_data: PersonProfileUpdate,
+    db: Session = Depends(get_db)
+):
+    """Update a person's profile information (image, biography, notes)."""
+    person = db.query(Person).filter(Person.id == person_id).first()
+    if not person:
+        raise HTTPException(status_code=404, detail="Person not found")
+
+    # Update only provided fields
+    if update_data.profile_image is not None:
+        person.profile_image = update_data.profile_image
+    if update_data.biography is not None:
+        person.biography = update_data.biography
+    if update_data.notes is not None:
+        person.notes = update_data.notes
+
+    person.updated_at = datetime.utcnow().isoformat()
+
+    db.commit()
+    db.refresh(person)
+
+    # Return updated person detail
+    return get_person(person_id, db)
 
 
 @router.get("/{person_id}/events", response_model=List[EventBrief])

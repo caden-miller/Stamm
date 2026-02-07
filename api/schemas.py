@@ -77,11 +77,19 @@ class FamilyBrief(BaseModel):
 class PersonDetail(PersonSummary):
     maiden_name: Optional[str] = None
     notes: Optional[str] = None
+    profile_image: Optional[str] = None
+    biography: Optional[str] = None
     events: List[EventBrief] = []
     families: List[FamilyBrief] = []
 
     class Config:
         from_attributes = True
+
+
+class PersonProfileUpdate(BaseModel):
+    profile_image: Optional[str] = None
+    biography: Optional[str] = None
+    notes: Optional[str] = None
 
 
 # ---------------------------------------------------------------------------
