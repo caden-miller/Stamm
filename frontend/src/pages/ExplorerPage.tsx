@@ -421,6 +421,60 @@ export default function ExplorerPage() {
             );
           })}
         </div>
+
+        {/* Date range filter */}
+        <div className="h-5 w-px" style={{ background: "var(--border)" }} />
+        <span className="text-xs font-medium uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>
+          Date Range
+        </span>
+        <div className="flex gap-2 items-center">
+          <input
+            type="text"
+            placeholder="From (e.g. 1600)"
+            value={dateRange?.start ?? ""}
+            onChange={(e) => {
+              const val = e.target.value;
+              setDateRange((prev) => ({
+                start: val,
+                end: prev?.end ?? "",
+              }));
+            }}
+            className="px-2 py-0.5 rounded text-xs w-28 outline-none border"
+            style={{
+              background: "var(--bg-surface)",
+              borderColor: "var(--border)",
+              color: "var(--text-primary)",
+            }}
+          />
+          <span style={{ color: "var(--text-muted)" }}>—</span>
+          <input
+            type="text"
+            placeholder="To (e.g. 1900)"
+            value={dateRange?.end ?? ""}
+            onChange={(e) => {
+              const val = e.target.value;
+              setDateRange((prev) => ({
+                start: prev?.start ?? "",
+                end: val,
+              }));
+            }}
+            className="px-2 py-0.5 rounded text-xs w-28 outline-none border"
+            style={{
+              background: "var(--bg-surface)",
+              borderColor: "var(--border)",
+              color: "var(--text-primary)",
+            }}
+          />
+          {(dateRange?.start || dateRange?.end) && (
+            <button
+              onClick={() => setDateRange(null)}
+              className="text-xs px-2 py-0.5 rounded"
+              style={{ color: "var(--gold)", background: "rgba(200, 163, 78, 0.1)" }}
+            >
+              Clear
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Map + overlays (recording container) */}

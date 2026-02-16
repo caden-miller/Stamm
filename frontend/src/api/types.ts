@@ -318,3 +318,22 @@ export interface LocationMergeResponse {
   merged_count: number;
   events_updated: number;
 }
+
+// Photo types (minimal definitions for compilation)
+export interface PersonPhotoOut {
+  id: number;
+  person_id: number;
+  file_path: string;
+  url?: string;
+  caption?: string;
+  date_taken?: string;
+  is_primary: boolean;
+  sort_order: number;
+}
+
+export interface PersonPhotoUpdate {
+  caption?: string;
+  date_taken?: string;
+  is_primary?: boolean;
+  sort_order?: number;
+}

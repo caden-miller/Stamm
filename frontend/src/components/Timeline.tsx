@@ -46,12 +46,12 @@ export default function Timeline({
         stack: true,
         showCurrentTime: false,
         zoomMin: 1000 * 60 * 60 * 24 * 365,
-        zoomMax: 1000 * 60 * 60 * 24 * 365 * 200,
+        zoomMax: 1000 * 60 * 60 * 24 * 365 * 500,
         margin: { item: { horizontal: 4, vertical: 4 } },
         tooltip: { followMouse: true },
         maxHeight: "100%",
-        min: new Date("1800-01-01"),
-        max: new Date("2030-01-01"),
+        min: new Date("1000-01-01"), // Allow viewing back to year 1000
+        max: new Date("2100-01-01"), // Extended to 2100
       }
     );
 
