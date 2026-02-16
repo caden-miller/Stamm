@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import React, { useState, useCallback, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { fetchFamily } from "../api/client";
 import type { FamilyData, FamilyMemberBrief } from "../api/types";
@@ -97,6 +97,7 @@ export default function FamilyTreeView({ rootPersonId, rootPersonName }: Props) 
           relation={null}
           nodes={nodes}
           onToggle={toggleNode}
+          ancestorPath={new Set([rootPersonId])} // Track ancestors to prevent cycles
         />
       ) : (
         <div className="text-sm py-4" style={{ color: "var(--text-muted)" }}>
@@ -107,22 +108,36 @@ export default function FamilyTreeView({ rootPersonId, rootPersonName }: Props) 
   );
 }
 
-function TreeNodeRow({
+// Memoized tree node component for performance
+const TreeNodeRow = React.memo(function TreeNodeRow({
   node,
   depth,
   relation,
   nodes,
   onToggle,
+  ancestorPath,
 }: {
   node: TreeNode;
   depth: number;
   relation: string | null;
   nodes: Map<number, TreeNode>;
   onToggle: (id: number) => void;
+  ancestorPath: Set<number>; // All ancestor IDs in current path (for cycle detection)
 }) {
   const { person, family, expanded, loading } = node;
   const hasFamily = family && (family.parents.length > 0 || family.spouses.length > 0 || family.children.length > 0);
   const sexColor = person.sex === "M" ? "#5088c5" : person.sex === "F" ? "#c55088" : "var(--text-muted)";
+
+  // Check if this person is already an ancestor in the current path (cycle detection)
+  const isInCurrentPath = ancestorPath.has(person.id);
+  const isCycle = isInCurrentPath && depth > 0; // Root is always in path, so exclude it
+
+  // Create new path set for children (immutable pattern for better React memoization)
+  const childPath = useMemo(() => {
+    const newPath = new Set(ancestorPath);
+    newPath.add(person.id);
+    return newPath;
+  }, [ancestorPath, person.id]);
 
   return (
     <div>
@@ -141,9 +156,13 @@ function TreeNodeRow({
             color: expanded ? "var(--gold)" : "var(--text-muted)",
             background: expanded ? "rgba(200, 163, 78, 0.1)" : "transparent",
           }}
+          disabled={isCycle} // Prevent expanding cycles
+          title={isCycle ? "Cycle detected - person already in tree path" : undefined}
         >
           {loading ? (
             <span className="animate-spin">⟳</span>
+          ) : isCycle ? (
+            "↺" // Cycle indicator
           ) : expanded && hasFamily ? (
             "▾"
           ) : (
@@ -170,18 +189,32 @@ function TreeNodeRow({
           </span>
         )}
 
+        {/* Cycle indicator badge */}
+        {isCycle && (
+          <span
+            className="text-[9px] font-bold uppercase px-1.5 py-0.5 rounded shrink-0"
+            style={{
+              background: "rgba(255, 100, 100, 0.15)",
+              color: "#ff6464",
+            }}
+            title="This person already appears above in the tree"
+          >
+            CYCLE
+          </span>
+        )}
+
         {/* Name */}
         <Link
           to={`/people/${person.id}`}
           className="text-sm font-medium hover:underline truncate"
-          style={{ color: "var(--text-primary)" }}
+          style={{ color: isCycle ? "var(--text-muted)" : "var(--text-primary)" }}
         >
           {person.display_name || "(Loading...)"}
         </Link>
       </div>
 
-      {/* Expanded children: parents, spouses, children */}
-      {expanded && family && (
+      {/* Expanded children: parents, spouses, children (only if not a cycle) */}
+      {expanded && family && !isCycle && (
         <div>
           {/* Parents */}
           {family.parents.map((p) => {
@@ -194,6 +227,7 @@ function TreeNodeRow({
                 relation="parent"
                 nodes={nodes}
                 onToggle={onToggle}
+                ancestorPath={childPath}
               />
             ) : (
               <CollapsedRow
@@ -202,6 +236,7 @@ function TreeNodeRow({
                 depth={depth + 1}
                 relation="parent"
                 onExpand={() => onToggle(p.id)}
+                isInPath={childPath.has(p.id)}
               />
             );
           })}
@@ -217,6 +252,7 @@ function TreeNodeRow({
                 relation="spouse"
                 nodes={nodes}
                 onToggle={onToggle}
+                ancestorPath={childPath}
               />
             ) : (
               <CollapsedRow
@@ -225,6 +261,7 @@ function TreeNodeRow({
                 depth={depth + 1}
                 relation="spouse"
                 onExpand={() => onToggle(s.id)}
+                isInPath={childPath.has(s.id)}
               />
             );
           })}
@@ -240,6 +277,7 @@ function TreeNodeRow({
                 relation="child"
                 nodes={nodes}
                 onToggle={onToggle}
+                ancestorPath={childPath}
               />
             ) : (
               <CollapsedRow
@@ -248,6 +286,7 @@ function TreeNodeRow({
                 depth={depth + 1}
                 relation="child"
                 onExpand={() => onToggle(c.id)}
+                isInPath={childPath.has(c.id)}
               />
             );
           })}
@@ -255,18 +294,20 @@ function TreeNodeRow({
       )}
     </div>
   );
-}
+});
 
-function CollapsedRow({
+const CollapsedRow = React.memo(function CollapsedRow({
   person,
   depth,
   relation,
   onExpand,
+  isInPath,
 }: {
   person: FamilyMemberBrief;
   depth: number;
   relation: string;
   onExpand: () => void;
+  isInPath: boolean;
 }) {
   const sexColor = person.sex === "M" ? "#5088c5" : person.sex === "F" ? "#c55088" : "var(--text-muted)";
 
@@ -281,8 +322,10 @@ function CollapsedRow({
         onClick={onExpand}
         className="w-5 h-5 flex items-center justify-center rounded text-xs shrink-0"
         style={{ color: "var(--text-muted)" }}
+        disabled={isInPath}
+        title={isInPath ? "Would create cycle" : undefined}
       >
-        ▸
+        {isInPath ? "↺" : "▸"}
       </button>
 
       <div
@@ -300,13 +343,27 @@ function CollapsedRow({
         {relation}
       </span>
 
+      {isInPath && (
+        <span
+          className="text-[9px] font-bold uppercase px-1.5 py-0.5 rounded shrink-0"
+          style={{
+            background: "rgba(255, 100, 100, 0.15)",
+            color: "#ff6464",
+          }}
+          title="Would create cycle in tree"
+        >
+          CYCLE
+        </span>
+      )}
+
       <button
         onClick={onExpand}
         className="text-sm truncate hover:underline"
-        style={{ color: "var(--text-secondary)" }}
+        style={{ color: isInPath ? "var(--text-muted)" : "var(--text-secondary)" }}
+        disabled={isInPath}
       >
         {person.display_name}
       </button>
     </div>
   );
-}
+});
